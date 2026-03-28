@@ -1,0 +1,14 @@
+{
+  "name": "zsh-claude",
+  "version": "0.1.0",
+  "description": "ZSH plugin for Claude-powered command line completions",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "^3.1.1"
+  },
+  "license": "MIT"
+}
