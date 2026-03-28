@@ -14,7 +14,16 @@
 
 Type what you want in plain English. Press `Ctrl+X`. Get the command.
 
+## Requirements
+
+- [ZSH](https://www.zsh.org/) shell
+- [Bun](https://bun.sh) runtime
+- API key — [Anthropic](https://console.anthropic.com/settings/keys) or [OpenRouter](https://openrouter.ai/keys)
+- [Oh My Zsh](https://ohmyz.sh/) (optional, for plugin-style install)
+
 ## Install
+
+### With Oh My Zsh
 
 ```bash
 git clone https://github.com/dante4rt/zsh-claude ~/.oh-my-zsh/custom/plugins/zsh-claude
@@ -28,8 +37,19 @@ plugins=(... zsh-claude)
 bindkey '^X' create_completion
 ```
 
-> [!IMPORTANT]
-> Requires [Bun](https://bun.sh) runtime and an API key (Anthropic or OpenRouter).
+### Without Oh My Zsh
+
+```bash
+git clone https://github.com/dante4rt/zsh-claude ~/zsh-claude
+cd ~/zsh-claude && bun install
+```
+
+Add to `.zshrc`:
+
+```zsh
+source ~/zsh-claude/zsh-claude.plugin.zsh
+bindkey '^X' create_completion
+```
 
 ## Usage
 
