@@ -16,6 +16,13 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("no markdown");
   });
 
+  it("includes OS context", () => {
+    const prompt = buildSystemPrompt();
+
+    expect(prompt).toMatch(/macOS|Linux|Windows/);
+    expect(prompt).toContain("-compatible commands");
+  });
+
   it("includes instruction for comment handling", () => {
     const prompt = buildSystemPrompt();
 

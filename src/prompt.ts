@@ -1,13 +1,25 @@
-const SYSTEM_PROMPT = `You are a ZSH command line completion assistant. Given a partial command or a comment describing what the user wants, output ONLY the completed command. Rules:
+import { platform } from "os";
+
+function getOsContext(): string {
+  const os = platform();
+  if (os === "darwin") return "macOS";
+  if (os === "win32") return "Windows";
+  return "Linux";
+}
+
+function buildPrompt(): string {
+  const os = getOsContext();
+  return `You are a ZSH command line completion assistant running on ${os}. Given a partial command or a comment describing what the user wants, output ONLY the completed command. Rules:
 - Output ONLY the command, nothing else
 - No explanations, no markdown, no code blocks
 - If input is a comment (starts with #), output the command that does what the comment describes
 - If input is a partial command, complete it
-- Use common CLI tools and best practices
+- Use ${os}-compatible commands and tools only
 - Be concise -- prefer one-liners when possible`;
+}
 
 export function buildSystemPrompt(): string {
-  return SYSTEM_PROMPT;
+  return buildPrompt();
 }
 
 export function buildUserMessage(buffer: string, cursor: number): string {
