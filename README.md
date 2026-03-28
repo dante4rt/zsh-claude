@@ -59,9 +59,18 @@ bindkey '^X' create_completion
 ### Environment Variables (recommended)
 
 ```zsh
+# Option 1: Anthropic directly (recommended)
 export ANTHROPIC_API_KEY="sk-ant-..."
-export ZSH_CLAUDE_MODEL="claude-haiku-4-20250414"  # optional
+
+# Option 2: OpenRouter as fallback
+export OPENROUTER_API_KEY="sk-or-..."
+
+# Optional: override model
+export ZSH_CLAUDE_MODEL="claude-haiku-4-20250414"
 ```
+
+> [!NOTE]
+> If both keys are set, Anthropic is used. OpenRouter kicks in only when `ANTHROPIC_API_KEY` is missing.
 
 ### Config File
 
@@ -70,6 +79,7 @@ Create `~/.config/zsh-claude/config.json`:
 ```json
 {
   "apiKey": "sk-ant-...",
+  "openrouterApiKey": "sk-or-...",
   "model": "claude-haiku-4-20250414",
   "maxTokens": 256
 }
@@ -82,8 +92,9 @@ Create `~/.config/zsh-claude/config.json`:
 
 | Variable | Description | Default |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | Your Anthropic API key | _(required)_ |
-| `ZSH_CLAUDE_MODEL` | Model to use | `claude-haiku-4-20250414` |
+| `ANTHROPIC_API_KEY` | Anthropic API key (primary) | - |
+| `OPENROUTER_API_KEY` | OpenRouter API key (fallback) | - |
+| `ZSH_CLAUDE_MODEL` | Model to use | `claude-haiku-4-20250414` (Anthropic) / `anthropic/claude-3.5-haiku` (OpenRouter) |
 
 > [!TIP]
 > Haiku is the default because it's fast and cheap for shell completions. For more complex commands, try `claude-sonnet-4-20250514`.

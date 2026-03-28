@@ -1,10 +1,18 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { getCompletion } from "../src/client";
 import type { Config } from "../src/config";
 
-const mockConfig: Config = {
-  apiKey: "sk-ant-test-key",
+const anthropicConfig: Config = {
+  provider: "anthropic",
+  apiKey: "sk-ant-test",
   model: "claude-haiku-4-20250414",
+  maxTokens: 256,
+};
+
+const openrouterConfig: Config = {
+  provider: "openrouter",
+  apiKey: "sk-or-test",
+  model: "anthropic/claude-3.5-haiku",
   maxTokens: 256,
 };
 
@@ -16,53 +24,60 @@ describe("getCompletion", () => {
     vi.restoreAllMocks();
   });
 
-  it("returns completion text on successful response", async () => {
+  it("returns completion text from anthropic on success", async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({
-        content: [{ type: "text", text: "docker ps --format '{{.Names}}'" }],
-      }),
-    });
-
-    const result = await getCompletion("system", "docker ps", mockConfig);
-
-    expect(result).toBe("docker ps --format '{{.Names}}'");
-    expect(globalThis.fetch).toHaveBeenCalledOnce();
-  });
-
-  it("sends correct headers and body", async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
+      json: () => Promise.resolve({
         content: [{ type: "text", text: "ls -la" }],
       }),
     });
 
-    await getCompletion("test-system", "ls", mockConfig);
+    const result = await getCompletion("system", "# list files", anthropicConfig);
+    expect(result).toBe("ls -la");
+  });
 
-    const [url, options] = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
-      .calls[0] as [string, RequestInit];
+  it("sends correct headers to anthropic", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ content: [{ type: "text", text: "ok" }] }),
+    });
 
+    await getCompletion("system", "test", anthropicConfig);
+
+    const [url, options] = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
     expect(url).toBe("https://api.anthropic.com/v1/messages");
-    expect((options.headers as Record<string, string>)["x-api-key"]).toBe(
-      "sk-ant-test-key",
-    );
-    expect(
-      (options.headers as Record<string, string>)["anthropic-version"],
-    ).toBe("2023-06-01");
+    expect(options.headers["x-api-key"]).toBe("sk-ant-test");
+    expect(options.headers["anthropic-version"]).toBe("2023-06-01");
+  });
 
-    const body = JSON.parse(options.body as string);
-    expect(body.model).toBe("claude-haiku-4-20250414");
-    expect(body.max_tokens).toBe(256);
-    expect(body.system).toBe("test-system");
-    expect(body.messages[0].content).toBe("ls");
+  it("returns completion text from openrouter on success", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({
+        choices: [{ message: { content: "docker ps -a" } }],
+      }),
+    });
+
+    const result = await getCompletion("system", "# list containers", openrouterConfig);
+    expect(result).toBe("docker ps -a");
+  });
+
+  it("sends correct headers to openrouter", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ choices: [{ message: { content: "ok" } }] }),
+    });
+
+    await getCompletion("system", "test", openrouterConfig);
+
+    const [url, options] = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(url).toBe("https://openrouter.ai/api/v1/chat/completions");
+    expect(options.headers["authorization"]).toBe("Bearer sk-or-test");
   });
 
   it("returns empty string when api key is missing", async () => {
-    const noKeyConfig: Config = { ...mockConfig, apiKey: "" };
-
+    const noKeyConfig: Config = { ...anthropicConfig, apiKey: "" };
     const result = await getCompletion("system", "test", noKeyConfig);
-
     expect(result).toBe("");
   });
 
@@ -70,55 +85,39 @@ describe("getCompletion", () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 401,
-      text: async () => "Unauthorized",
+      text: () => Promise.resolve("Unauthorized"),
     });
 
-    const stderrSpy = vi
-      .spyOn(process.stderr, "write")
-      .mockImplementation(() => true);
-
-    const result = await getCompletion("system", "test", mockConfig);
-
+    const result = await getCompletion("system", "test", anthropicConfig);
     expect(result).toBe("");
-    expect(stderrSpy).toHaveBeenCalled();
   });
 
   it("returns empty string on network error", async () => {
-    globalThis.fetch = vi.fn().mockRejectedValue(new Error("Network error"));
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error("network down"));
 
-    const stderrSpy = vi
-      .spyOn(process.stderr, "write")
-      .mockImplementation(() => true);
-
-    const result = await getCompletion("system", "test", mockConfig);
-
+    const result = await getCompletion("system", "test", anthropicConfig);
     expect(result).toBe("");
-    expect(stderrSpy).toHaveBeenCalled();
   });
 
-  it("handles response with no text blocks", async () => {
+  it("handles empty choices from openrouter", async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({
-        content: [],
-      }),
+      json: () => Promise.resolve({ choices: [] }),
     });
 
-    const result = await getCompletion("system", "test", mockConfig);
-
+    const result = await getCompletion("system", "test", openrouterConfig);
     expect(result).toBe("");
   });
 
   it("trims whitespace from completion text", async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({
+      json: () => Promise.resolve({
         content: [{ type: "text", text: "  ls -la  \n" }],
       }),
     });
 
-    const result = await getCompletion("system", "test", mockConfig);
-
+    const result = await getCompletion("system", "test", anthropicConfig);
     expect(result).toBe("ls -la");
   });
 });

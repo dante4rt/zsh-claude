@@ -2,11 +2,15 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
 
-const DEFAULT_MODEL = "claude-haiku-4-20250414";
+const DEFAULT_ANTHROPIC_MODEL = "claude-haiku-4-20250414";
+const DEFAULT_OPENROUTER_MODEL = "anthropic/claude-3.5-haiku";
 const DEFAULT_MAX_TOKENS = 256;
 const CONFIG_PATH = join(homedir(), ".config", "zsh-claude", "config.json");
 
+type Provider = "anthropic" | "openrouter";
+
 export interface Config {
+  readonly provider: Provider;
   readonly apiKey: string;
   readonly model: string;
   readonly maxTokens: number;
@@ -14,6 +18,7 @@ export interface Config {
 
 interface ConfigFile {
   readonly apiKey?: string;
+  readonly openrouterApiKey?: string;
   readonly model?: string;
   readonly maxTokens?: number;
 }
@@ -30,13 +35,24 @@ function loadConfigFile(path: string): ConfigFile {
 export function loadConfig(configPath: string = CONFIG_PATH): Config {
   const fileConfig = loadConfigFile(configPath);
 
-  const apiKey = process.env.ANTHROPIC_API_KEY ?? fileConfig.apiKey ?? "";
-  const model = process.env.ZSH_CLAUDE_MODEL ?? fileConfig.model ?? DEFAULT_MODEL;
-  const maxTokens = fileConfig.maxTokens ?? DEFAULT_MAX_TOKENS;
+  const anthropicKey = process.env.ANTHROPIC_API_KEY ?? fileConfig.apiKey ?? "";
+  const openrouterKey = process.env.OPENROUTER_API_KEY ?? fileConfig.openrouterApiKey ?? "";
 
-  if (!apiKey) {
-    process.stderr.write("zsh-claude: ANTHROPIC_API_KEY not set\n");
+  const hasAnthropic = anthropicKey.length > 0;
+  const hasOpenRouter = openrouterKey.length > 0;
+
+  if (!hasAnthropic && !hasOpenRouter) {
+    process.stderr.write(
+      "zsh-claude: no API key found. Set ANTHROPIC_API_KEY or OPENROUTER_API_KEY\n",
+    );
+    return { provider: "anthropic", apiKey: "", model: DEFAULT_ANTHROPIC_MODEL, maxTokens: DEFAULT_MAX_TOKENS };
   }
 
-  return { apiKey, model, maxTokens };
+  const provider: Provider = hasAnthropic ? "anthropic" : "openrouter";
+  const apiKey = hasAnthropic ? anthropicKey : openrouterKey;
+  const defaultModel = hasAnthropic ? DEFAULT_ANTHROPIC_MODEL : DEFAULT_OPENROUTER_MODEL;
+  const model = process.env.ZSH_CLAUDE_MODEL ?? fileConfig.model ?? defaultModel;
+  const maxTokens = fileConfig.maxTokens ?? DEFAULT_MAX_TOKENS;
+
+  return { provider, apiKey, model, maxTokens };
 }
