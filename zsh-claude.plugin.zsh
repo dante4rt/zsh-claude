@@ -4,7 +4,7 @@ _ZSH_CLAUDE_DIR=$(dirname $0)
 
 create_completion() {
     local text=$BUFFER
-    local completion=$(echo -n "$text" | bun $_ZSH_CLAUDE_DIR/src/complete.ts $CURSOR 2>/dev/null)
+    local completion=$(echo -n "$text" | bun --no-env-file $_ZSH_CLAUDE_DIR/src/complete.ts $CURSOR 2>/dev/null)
 
     if [[ -n "$completion" ]]; then
         BUFFER="$completion"
