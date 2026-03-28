@@ -15,7 +15,9 @@ function buildPrompt(): string {
 - If input is a comment (starts with #), output the command that does what the comment describes
 - If input is a partial command, complete it
 - Use ${os}-compatible commands and tools only
-- Be concise -- prefer one-liners when possible`;
+- Be concise -- prefer one-liners when possible
+- Keep commands simple and robust -- avoid nested subshells, xargs tricks, or complex piping that might break
+- Prefer straightforward commands over clever ones`;
 }
 
 export function buildSystemPrompt(): string {
