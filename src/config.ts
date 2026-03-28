@@ -3,7 +3,7 @@ import { join } from "path";
 import { homedir } from "os";
 
 const DEFAULT_ANTHROPIC_MODEL = "claude-haiku-4-20250414";
-const DEFAULT_OPENROUTER_MODEL = "anthropic/claude-3.5-haiku";
+const DEFAULT_OPENROUTER_MODEL = "anthropic/claude-haiku-4.5";
 const DEFAULT_MAX_TOKENS = 256;
 const CONFIG_PATH = join(homedir(), ".config", "zsh-claude", "config.json");
 

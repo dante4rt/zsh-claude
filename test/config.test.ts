@@ -55,7 +55,7 @@ describe("loadConfig", () => {
 
     expect(config.provider).toBe("openrouter");
     expect(config.apiKey).toBe("sk-or-test-key");
-    expect(config.model).toBe("anthropic/claude-3.5-haiku");
+    expect(config.model).toBe("anthropic/claude-haiku-4.5");
   });
 
   it("prioritizes anthropic over openrouter when both are set", () => {
@@ -107,7 +107,7 @@ describe("loadConfig", () => {
 
     expect(config.provider).toBe("openrouter");
     expect(config.apiKey).toBe("sk-or-file-key");
-    expect(config.model).toBe("anthropic/claude-3.5-haiku");
+    expect(config.model).toBe("anthropic/claude-haiku-4.5");
   });
 
   it("prioritizes env vars over config file", () => {

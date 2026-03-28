@@ -12,7 +12,7 @@ const anthropicConfig: Config = {
 const openrouterConfig: Config = {
   provider: "openrouter",
   apiKey: "sk-or-test",
-  model: "anthropic/claude-3.5-haiku",
+  model: "anthropic/claude-haiku-4.5",
   maxTokens: 256,
 };
 
