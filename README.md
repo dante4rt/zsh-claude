@@ -1,11 +1,18 @@
-# zsh-claude
+<p align="center">
+  <h1 align="center">zsh-claude</h1>
+  <p align="center">AI-powered command completion for ZSH, using Claude.</p>
+</p>
 
-ZSH plugin for Claude-powered command line completions. Type a comment or partial command, press `Ctrl+X`, get the completed command.
+<p align="center">
+  <a href="#install">Install</a> ·
+  <a href="#usage">Usage</a> ·
+  <a href="#configuration">Configuration</a> ·
+  <a href="#development">Development</a>
+</p>
 
-## Requirements
+---
 
-- [Bun](https://bun.sh)
-- Anthropic API key or OpenRouter API key
+Type what you want in plain English. Press `Ctrl+X`. Get the command.
 
 ## Install
 
@@ -22,15 +29,47 @@ bindkey '^X' create_completion
 ```
 
 > [!IMPORTANT]
-> If you get a `zsh-syntax-highlighting` warning, add `zle -N create_completion` after the plugins line.
+> Requires [Bun](https://bun.sh) runtime and an API key (Anthropic or OpenRouter).
+
+## Usage
+
+### Describe what you want
+
+```bash
+# show disk usage sorted by size                → du -sh * | sort -rh
+# kill process on port 3000                     → lsof -ti:3000 | xargs kill
+# find all .ts files modified today             → find . -name "*.ts" -mtime -1
+# compress this folder into a tar.gz            → tar -czf archive.tar.gz .
+# show my public IP                             → curl -s ifconfig.me
+# list all running docker containers            → docker ps
+# count lines of code in src/                   → find src -name "*.ts" | xargs wc -l
+# show git log as a graph                       → git log --oneline --graph --all
+```
+
+### Complete a partial command
+
+```bash
+git rebase                                      → git rebase -i HEAD~3
+docker compose up                               → docker compose up -d --build
+ssh-keygen -t                                   → ssh-keygen -t ed25519 -C "your@email.com"
+```
+
+### Fix a broken command
+
+```bash
+find . -name "*.ts" -exec grep "TODO" {} ;      → find . -name "*.ts" -exec grep "TODO" {} \;
+```
+
+> [!NOTE]
+> Commands are OS-aware. macOS gets `vm_stat` instead of `free -h`, `pbcopy` instead of `xclip`, etc.
 
 ## Configuration
 
-Set one of these in `.zshrc`:
+Add to `.zshrc`:
 
 ```zsh
-export ANTHROPIC_API_KEY="sk-ant-..."     # primary
-export OPENROUTER_API_KEY="sk-or-..."     # fallback (used when no Anthropic key)
+export ANTHROPIC_API_KEY="sk-ant-..."            # primary
+export OPENROUTER_API_KEY="sk-or-..."            # fallback (when no Anthropic key)
 export ZSH_CLAUDE_MODEL="claude-haiku-4-20250414"  # optional
 ```
 
@@ -40,37 +79,34 @@ Or use a config file:
 mkdir -p ~/.config/zsh-claude
 cat > ~/.config/zsh-claude/config.json << 'EOF'
 {
-  "apiKey": "sk-ant-...",
   "openrouterApiKey": "sk-or-...",
-  "model": "claude-haiku-4-20250414",
   "maxTokens": 256
 }
 EOF
 ```
 
-Env vars override config file. Anthropic overrides OpenRouter.
+| Provider | Default Model | When Used |
+|----------|--------------|-----------|
+| Anthropic | `claude-haiku-4-20250414` | `ANTHROPIC_API_KEY` is set |
+| OpenRouter | `anthropic/claude-haiku-4.5` | Only `OPENROUTER_API_KEY` is set |
 
-## Usage
+Env vars override config file. Anthropic is preferred over OpenRouter when both are set.
 
-```bash
-# describe what you want, press Ctrl+X
-# list all docker containers sorted by size
-→ docker ps --size --format "table {{.Names}}\t{{.Size}}" | sort -k2 -h
+## How It Works
 
-# complete a partial command
-docker compose up
-→ docker compose up -d --build --remove-orphans
+1. You type a comment or partial command
+2. Press `Ctrl+X`
+3. ZSH pipes your buffer to a TypeScript CLI via Bun
+4. Claude generates the completed command
+5. Your buffer gets replaced
 
-# fix a broken command
-find . -name "*.ts" -exec grep -l "console.log" {} ;
-→ find . -name "*.ts" -exec grep -l "console.log" {} \;
-```
+No Python. No SDK. Just raw API calls with Bun's built-in fetch.
 
 ## Development
 
 ```bash
 bun install
-bun test
+bun test     # 27 tests
 ```
 
 ## License
