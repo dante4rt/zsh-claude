@@ -53,9 +53,10 @@ async function callOpenRouter(
   const response = await fetch(OPENROUTER_URL, {
     method: "POST",
     headers: {
-      "authorization": `Bearer ${config.apiKey}`,
-      "content-type": "application/json",
-      "x-title": "zsh-claude",
+      "Authorization": `Bearer ${config.apiKey}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": "https://github.com/dante4rt/zsh-claude",
+      "X-Title": "zsh-claude",
     },
     body: JSON.stringify({
       model: config.model,

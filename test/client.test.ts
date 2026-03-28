@@ -72,7 +72,7 @@ describe("getCompletion", () => {
 
     const [url, options] = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
     expect(url).toBe("https://openrouter.ai/api/v1/chat/completions");
-    expect(options.headers["authorization"]).toBe("Bearer sk-or-test");
+    expect(options.headers["Authorization"]).toBe("Bearer sk-or-test");
   });
 
   it("returns empty string when api key is missing", async () => {
