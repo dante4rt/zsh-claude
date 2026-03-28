@@ -14,6 +14,10 @@
 
 Type what you want in plain English. Press `Ctrl+X`. Get the command.
 
+<p align="center">
+  <img src="demo.gif" alt="zsh-claude demo" width="960" />
+</p>
+
 ## Requirements
 
 - [ZSH](https://www.zsh.org/) shell
